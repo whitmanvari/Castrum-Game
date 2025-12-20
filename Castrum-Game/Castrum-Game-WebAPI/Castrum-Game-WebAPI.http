@@ -1,0 +1,6 @@
+@Castrum_Game_WebAPI_HostAddress = http://localhost:5285
+
+GET {{Castrum_Game_WebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
