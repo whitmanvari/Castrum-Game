@@ -7,4 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Castrum-Game-Data\Castrum-Game-Data.csproj" />
+  </ItemGroup>
+
 </Project>

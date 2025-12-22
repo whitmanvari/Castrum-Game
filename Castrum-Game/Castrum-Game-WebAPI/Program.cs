@@ -1,4 +1,6 @@
+﻿using Castrum_Game_Core.Interfaces;
 using Castrum_Game_Data;
+using Castrum_Game_Service.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +14,10 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Servis Katmanı Tanımları (Dependency Injection)
+// IGameService istenirse, GameService verilecek.
+builder.Services.AddScoped<IGameService, GameService>();
 
 var app = builder.Build();
 

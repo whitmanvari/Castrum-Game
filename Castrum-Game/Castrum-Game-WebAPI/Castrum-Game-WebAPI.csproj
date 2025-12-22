@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Castrum-Game-Core\Castrum-Game-Core.csproj" />
     <ProjectReference Include="..\Castrum-Game-Data\Castrum-Game-Data.csproj" />
+    <ProjectReference Include="..\Castrum-Game-Service\Castrum-Game-Service.csproj" />
   </ItemGroup>
 
 </Project>
