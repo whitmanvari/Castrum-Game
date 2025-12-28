@@ -15,14 +15,14 @@ export const initializeBoard = () => {
     // 1. KRAL (Tam Ortaya)
     board[center][center] = PIECES.KING;
 
-    // 2. SAVUNANLAR (Merkezin etrafına elmas/artı şeklinde)
+    // 2. SAVUNANLAR 
     // Merkezin hemen sağı, solu, yukarısı, aşağısı
     const defPositions = [
         [center, center-1], [center, center-2], // Sol
         [center, center+1], [center, center+2], // Sağ
         [center-1, center], [center-2, center], // Yukarı
         [center+1, center], [center+2, center]  // Aşağı
-        // Köşelere destek (İsteğe bağlı, 13x13 varyasyonlarında genelde vardır)
+        // Köşelere destek 
     ];
     // Savunanları yerleştir
     defPositions.forEach(pos => {

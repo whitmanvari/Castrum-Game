@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { initializeBoard, PIECES } from '../utils/gameLogic';
 
-// İşlemeli zemin deseni (Daha belirgin)
 const celticPattern = `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v20h2V0h2v20h2V0h2v20h2V0h2v20h2v2H22v-2h-2v2H22v2h-2v2H22v2h-2v2H22v2h-2v2H22v2h-2v2H22v2h-2v2H22v2h-2v2H22v2h-2v2H22v2h-2v2H22v2h-2v2H22v2h-2v2z' fill='%232c1e16' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E")`;
 
-// Kale Simgesi (Kral İçin)
 const CastleIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3/5 h-3/5 text-[#2a1a10] drop-shadow-[inset_0_1px_1px_rgba(0,0,0,0.8)]">
         <path d="M19 3H5v2h14V3zm0 4H5v2h14V7zm0 4H5v2h14v-2zm-7 4H5v2h2v-2h2v2h2v-2h2v2h2v-2h2v2h2v-2zM5 19h14v2H5v-2z"/>
@@ -36,7 +34,6 @@ const GameBoard = () => {
     };
 
     return (
-        // Tahtayı ekranın %85 yüksekliğine (h-[85vh]) sabitliyoruz ki DEVASA görünsün
         <div className="h-[80vh] aspect-square relative z-10 flex items-center justify-center p-4">
             
             {/* Dış Çerçeve (Kalın, Oyma Ahşap) */}
@@ -62,7 +59,7 @@ const GameBoard = () => {
                             const isCorner = (rowIndex === 0 || rowIndex === 12) && (colIndex === 0 || colIndex === 12);
                             const isCenter = rowIndex === 6 && colIndex === 6;
                             
-                            // Zemin Rengi (İşlemeli)
+                            // Zemin Rengi 
                             let cellClass = "bg-[#cbb694]"; // Açık parşömen
                             if ((rowIndex + colIndex) % 2 === 1) cellClass = "bg-[#d7ccc8]"; // Satranç gibi hafif ton farkı (isteğe bağlı)
                             if (isCorner || isCenter) cellClass = "bg-[#8d6e63] shadow-inner"; // Özel kareler
