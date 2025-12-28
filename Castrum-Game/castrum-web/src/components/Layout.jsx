@@ -45,7 +45,7 @@ const Layout = ({ children }) => {
                 {/* 2. MENÜ (ORTA ALAN) */}
                 <nav className="flex-1 px-6 py-8 space-y-4 overflow-y-auto">
                     <MenuItem text="SAVAŞ ALANI" to="/" />
-                    <MenuItem text="LOBİ & TURNUVA" to="/lobby" />
+                    <MenuItem text="LOBİ & TURNUVA" to="/tournament" />
                     <MenuItem text="KADİM KURALLAR" to="/rules" />
                     <MenuItem text="LİDERLİK TABLOSU" to="/leaderboard" />
 
