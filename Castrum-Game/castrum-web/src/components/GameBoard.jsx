@@ -167,7 +167,9 @@ const GameBoard = ({ gameId, board, onBoardUpdate, onWin, isReplayMode, p1Name, 
                                         className={`relative flex items-center justify-center ${cellClass} ${!isReplayMode && 'hover:brightness-110'} transition-all`}
                                     >
                                         <div className="absolute inset-0 shadow-[inset_0_0_5px_rgba(62,39,35,0.2)] pointer-events-none"></div>
-                                        {(isCorner || isCenter) && <span className="absolute text-[#3e2723]/30 font-serif text-[10px] md:text-xl select-none">ᛝ</span>}
+                                        {(isCorner || isCenter) && <span className="absolute text-[#3e2723]/30 font-serif text-[10px] md:text-xl select-none pointer-events-none">
+                                        ᛝ
+                                        </span>}
                                         {getPieceContent(cellValue)}
                                     </div>
                                 );
