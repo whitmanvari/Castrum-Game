@@ -151,21 +151,28 @@ namespace Castrum_Game_Service.Services
             await _context.SaveChangesAsync();
         }
 
+        // GameService.cs içindeki GetLeaderboardAsync metodu:
+
         public async Task<List<LeaderboardDto>> GetLeaderboardAsync()
         {
-            return await _context.Users
-                .Where(u => u.TotalWins > 0) // Sadece en az 1 zaferi olanları getir
-                .OrderByDescending(u => u.TotalWins) // En çok kazanan en üstte
-                .Select((u, index) => new LeaderboardDto
-                {
-                    Rank = index + 1,
-                    PlayerName = u.Username,
-                    Wins = u.TotalWins,
-                    Title = u.TotalWins > 10 ? "EFSANEVİ GENERAL" :
-                            (u.TotalWins > 5 ? "SAVAŞ LORDU" :
-                            (u.TotalWins > 2 ? "YÜZBAŞI" : "ER"))
-                })
-                .ToListAsync();
+  
+            var users = await _context.Users
+                .Where(u => u.TotalWins > 0) // Sadece kazananlar
+                .OrderByDescending(u => u.TotalWins) // Puanı yüksek olan üstte
+                .ToListAsync(); 
+
+            // 2. ADIM: Bellekteki veriye sıra numarası ver
+            var leaderboard = users.Select((u, index) => new LeaderboardDto
+            {
+                Rank = index + 1,
+                PlayerName = u.Username,
+                Wins = u.TotalWins,
+                Title = u.TotalWins > 10 ? "EFSANEVİ GENERAL 🍫" :
+                        (u.TotalWins > 5 ? "SAVAŞ LORDU" :
+                        (u.TotalWins > 2 ? "YÜZBAŞI" : "ER"))
+            }).ToList();
+
+            return leaderboard;
         }
         public async Task<User> LoginAsync(string username)
         {

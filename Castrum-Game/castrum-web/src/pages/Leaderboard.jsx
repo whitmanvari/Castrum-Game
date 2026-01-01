@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { gameService } from '../services/gameService';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-// DÜZELTME 1: Crown import edildi!
 import { Trophy, Medal, Star, TrendingUp, Crown } from 'lucide-react'; 
 import { motion } from 'framer-motion';
 
@@ -24,9 +23,9 @@ const Leaderboard = () => {
   }, []);
 
   // Grafik Verisi (İlk 5 Kişi)
-  const chartData = players.slice(0, 5).map(p => ({
-    name: p.playerName.length > 8 ? p.playerName.substring(0, 8) + '...' : p.playerName,
-    wins: p.wins
+  const chartData = (players || []).slice(0, 5).map(p => ({
+    name: p.playerName ? (p.playerName.length > 8 ? p.playerName.substring(0, 8) + '...' : p.playerName) : '?',
+    wins: p.wins || 0
   }));
 
   if (loading) return <div className="flex h-full items-center justify-center text-[#ffd700] animate-pulse">Veriler Analiz Ediliyor...</div>;
@@ -54,10 +53,13 @@ const Leaderboard = () => {
             >
                 <div className="absolute top-0 right-0 p-2 text-[#ffd700]/10"><Trophy size={100} /></div>
                 <div className="text-[#ffd700] mb-2"><Crown size={40} /></div>
+                
                 <div className="text-3xl font-bold text-white mb-1">
                     {players.length > 0 ? players[0].playerName : "-"}
                 </div>
+                
                 <div className="text-xs text-[#ffd700] tracking-widest uppercase">Mevcut Şampiyon</div>
+                
                 <div className="mt-4 text-4xl font-black text-white">
                     {players.length > 0 ? players[0].wins : 0} 
                     <span className="text-sm text-gray-500 font-normal ml-2">Zafer</span>
@@ -65,15 +67,15 @@ const Leaderboard = () => {
             </motion.div>
 
             {/* Grafik Alanı */}
-            {/* DÜZELTME 2: h-64 yerine h-[300px] ve min-height vererek grafiğin çökmesini engelledik */}
-            <div className="md:col-span-2 bg-[#1a1a1a]/50 border border-white/5 p-6 rounded-2xl relative h-[300px] flex flex-col">
+            <div className="md:col-span-2 bg-[#1a1a1a]/50 border border-white/5 p-6 rounded-2xl relative h-[350px] flex flex-col">
                 <h3 className="text-sm text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                     <TrendingUp size={16} /> Zafer Analizi (Top 5)
                 </h3>
                 
+                {/* min-h-0 kritiktir, grafiğin taşmasını engeller */}
                 <div className="flex-1 w-full min-h-0">
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData}>
+                        <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                             <XAxis dataKey="name" stroke="#525252" fontSize={12} tickLine={false} axisLine={false} />
                             <Tooltip 
                                 contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '8px' }}
