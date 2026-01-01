@@ -11,5 +11,7 @@ namespace Castrum_Game_Core.Interfaces
         Task<List<GameMatchDto>> GetAllGamesAsync();
         Task<GameMove> MakeMoveAsync(CreateMoveDto request);
         Task<List<LeaderboardDto>> GetLeaderboardAsync();
+        Task EndGameAsync(EndGameDto request);
+        Task<User> LoginAsync(string username);
     }
 }

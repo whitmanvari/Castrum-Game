@@ -1,5 +1,3 @@
-// src/utils/gameLogic.js
-
 export const PIECES = {
     EMPTY: 0,
     ATTACKER: 1, // Siyah
@@ -7,62 +5,78 @@ export const PIECES = {
     KING: 3      // Kral
 };
 
-// Tahtayı Başlatma
+// 11x11 TAHTA KURULUMU
 export const initializeBoard = () => {
-    const board = Array(13).fill(null).map(() => Array(13).fill(PIECES.EMPTY));
-    const center = 6;
+    const board = Array(11).fill(null).map(() => Array(11).fill(PIECES.EMPTY));
+    const center = 5; // 0'dan başladığı için 11'in ortası 5'tir
 
-    // 1. KRAL
+    // 1. KRAL 
     board[center][center] = PIECES.KING;
 
-    // 2. SAVUNANLAR
+    // 2. SAVUNANLAR (Beyaz - 12 Asker + 1 Kral)
+    // Merkezin etrafında elmas/artı şekli
     const defPositions = [
-        [center, center - 1], [center, center - 2], [center, center + 1], [center, center + 2],
-        [center - 1, center], [center - 2, center], [center + 1, center], [center + 2, center],
-        [center - 1, center - 1], [center - 1, center + 1], [center + 1, center - 1], [center + 1, center + 1]
+        [center, center - 1], [center, center - 2],
+        [center, center + 1], [center, center + 2],
+        [center - 1, center], [center - 2, center],
+        [center + 1, center], [center + 2, center],
+        [center - 1, center - 1], [center - 1, center + 1],
+        [center + 1, center - 1], [center + 1, center + 1]
     ];
-    defPositions.forEach(pos => board[pos[0]][pos[1]] = PIECES.DEFENDER);
 
-    // 3. SALDIRANLAR
+    // Savunanları yerleştir
+    defPositions.forEach(pos => {
+        if (pos[0] >= 0 && pos[0] < 11 && pos[1] >= 0 && pos[1] < 11) {
+            board[pos[0]][pos[1]] = PIECES.DEFENDER;
+        }
+    });
+
+    // 3. SALDIRANLAR (Siyah - 24 Asker)
+    // Her kenarın ortasına T şeklinde yerleşim
     const attPositions = [
-        [0, 4], [0, 5], [0, 6], [0, 7], [0, 8], [1, 6],
-        [12, 4], [12, 5], [12, 6], [12, 7], [12, 8], [11, 6],
-        [4, 0], [5, 0], [6, 0], [7, 0], [8, 0], [6, 1],
-        [4, 12], [5, 12], [6, 12], [7, 12], [8, 12], [6, 11]
+        // Üst Kenar
+        [0, 3], [0, 4], [0, 5], [0, 6], [0, 7], [1, 5],
+        // Alt Kenar
+        [10, 3], [10, 4], [10, 5], [10, 6], [10, 7], [9, 5],
+        // Sol Kenar
+        [3, 0], [4, 0], [5, 0], [6, 0], [7, 0], [5, 1],
+        // Sağ Kenar
+        [3, 10], [4, 10], [5, 10], [6, 10], [7, 10], [5, 9]
     ];
-    attPositions.forEach(pos => board[pos[0]][pos[1]] = PIECES.ATTACKER);
+
+    attPositions.forEach(pos => {
+        if (pos[0] >= 0 && pos[0] < 11 && pos[1] >= 0 && pos[1] < 11) {
+            board[pos[0]][pos[1]] = PIECES.ATTACKER;
+        }
+    });
 
     return board;
 };
 
 // Hamle Geçerli mi?
 export const isValidMove = (board, fromRow, fromCol, toRow, toCol) => {
-    // 1. Hedefte başka taş var mı? (Doluya gidemez)
-    if (board[toRow][toCol] !== PIECES.EMPTY) return false;
+    // Sınır Kontrolü 
+    if (toRow < 0 || toRow >= 11 || toCol < 0 || toCol >= 11) return false;
 
-    // 2. Sadece Yatay veya Dikey hareket (Çapraz yasak)
+    if (board[toRow][toCol] !== PIECES.EMPTY) return false;
     if (fromRow !== toRow && fromCol !== toCol) return false;
 
-    // --- YENİ KURAL: MESAFE KONTROLÜ ---
     const movingPiece = board[fromRow][fromCol];
-
-    // Gidilen mesafe hesabı (Mutlak değer)
     const distance = Math.abs(toRow - fromRow) + Math.abs(toCol - fromCol);
 
     // KURAL: Eğer taş KRAL DEĞİLSE, 2 kareden fazla gidemez!
     if (movingPiece !== PIECES.KING && distance > 2) {
         return false;
     }
-    // ----------------------------------
 
-    // 3. Yol Üzerinde Engel Var mı? (Atlama Yapamaz)
-    if (fromRow === toRow) { // Yatay Hareket
+    // Yol Kontrolü
+    if (fromRow === toRow) { // Yatay
         const min = Math.min(fromCol, toCol);
         const max = Math.max(fromCol, toCol);
         for (let i = min + 1; i < max; i++) {
             if (board[fromRow][i] !== PIECES.EMPTY) return false;
         }
-    } else { // Dikey Hareket
+    } else { // Dikey
         const min = Math.min(fromRow, toRow);
         const max = Math.max(fromRow, toRow);
         for (let i = min + 1; i < max; i++) {
@@ -70,14 +84,12 @@ export const isValidMove = (board, fromRow, fromCol, toRow, toCol) => {
         }
     }
 
-    // 4. Yasaklı Bölgeler (Köşeler ve Merkez)
-    // Kural: Köşelere ve Merkeze SADECE Kral girebilir.
+    // Yasaklı Bölgeler 
     const isRestricted = (r, c) => {
-        const corners = [[0, 0], [0, 12], [12, 0], [12, 12], [6, 6]];
+        const corners = [[0,0], [0,10], [10,0], [10,10], [5,5]];
         return corners.some(([cr, cc]) => cr === r && cc === c);
     };
 
-    // Eğer taş KRAL DEĞİLSE ve hedef yasaklı bölge ise -> YASAK
     if (movingPiece !== PIECES.KING && isRestricted(toRow, toCol)) {
         return false;
     }
@@ -85,10 +97,10 @@ export const isValidMove = (board, fromRow, fromCol, toRow, toCol) => {
     return true;
 };
 
-// Taş Yeme Mantığı
+// Taş Yeme
 export const processMove = (board, r, c, playerType) => {
     const newBoard = board.map(row => [...row]);
-    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]]; // Sağ, Sol, Aşağı, Yukarı
+    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
     let captured = false;
 
     directions.forEach(([dr, dc]) => {
@@ -98,7 +110,7 @@ export const processMove = (board, r, c, playerType) => {
         const r2 = r + (dr * 2);
         const c2 = c + (dc * 2);
 
-        if (r2 >= 0 && r2 < 13 && c2 >= 0 && c2 < 13) {
+        if (r2 >= 0 && r2 < 11 && c2 >= 0 && c2 < 11) {
             const neighbor = newBoard[r1][c1];
             const farNeighbor = newBoard[r2][c2];
 
@@ -108,7 +120,8 @@ export const processMove = (board, r, c, playerType) => {
                 : (neighbor === PIECES.ATTACKER);
 
             if (isNeighborEnemy) {
-                const isCorner = (row, col) => (row === 0 && col === 0) || (row === 0 && col === 12) || (row === 12 && col === 0) || (row === 12 && col === 12) || (row === 6 && col === 6);
+                // Köşe ve Merkez kontrolü
+                const isCorner = (row, col) => (row === 0 && col === 0) || (row === 0 && col === 10) || (row === 10 && col === 0) || (row === 10 && col === 10) || (row === 5 && col === 5);
 
                 const isFarFriendly = isMeAttacker
                     ? (farNeighbor === PIECES.ATTACKER || isCorner(r2, c2))
@@ -125,20 +138,17 @@ export const processMove = (board, r, c, playerType) => {
     return { board: newBoard, captured };
 };
 
-// --- KAZANMA KONTROLLERİ ---
-
-// 1. SAVUNAN KAZANIR (Kral Kaçtı mı?)
+// Kazanma Kontrolü 
 export const checkWin = (board) => {
-    const corners = [[0, 0], [0, 12], [12, 0], [12, 12]];
+    const corners = [[0, 0], [0, 10], [10, 0], [10, 10]];
     return corners.some(([r, c]) => board[r][c] === PIECES.KING);
 };
 
-// 2. SALDIRAN KAZANIR (Kral Esir Alındı mı?) -> YENİ EKLENDİ!
+// Kral Esir Alındı mı? 
 export const checkKingCaptured = (board) => {
-    // Önce Kralı Bul
     let kingPos = null;
-    for (let r = 0; r < 13; r++) {
-        for (let c = 0; c < 13; c++) {
+    for (let r = 0; r < 11; r++) {
+        for (let c = 0; c < 11; c++) {
             if (board[r][c] === PIECES.KING) {
                 kingPos = { r, c };
                 break;
@@ -147,26 +157,19 @@ export const checkKingCaptured = (board) => {
         if (kingPos) break;
     }
 
-    if (!kingPos) return true; // Kral tahtada yoksa (hata veya yenmiş) kazanılmış sayılır.
+    if (!kingPos) return true;
 
     const { r, c } = kingPos;
-    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]]; // Sağ, Sol, Aşağı, Yukarı
+    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
 
-    // Kralın 4 tarafı da "Düşman" veya "Yasak Bölge" mi?
     const isSurrounded = directions.every(([dr, dc]) => {
         const nr = r + dr;
         const nc = c + dc;
 
-        // Tahta dışı (Kenarlar) genelde kuşatma sayılmaz, Kral kenara kaçarsa sıkıştırılamaz.
-        // O yüzden kenardaysa FALSE döneriz, yani yakalanamaz.
-        if (nr < 0 || nr >= 13 || nc < 0 || nc >= 13) return false;
+        if (nr < 0 || nr >= 11 || nc < 0 || nc >= 11) return false; // Kenarda yakalanamaz
 
         const neighborPiece = board[nr][nc];
-
-        // Tehlikeli Kareler: Köşeler ve Merkez (Eğer Kral içinde değilse)
-        const isRestrictedSquare = (nr === 0 && nc === 0) || (nr === 0 && nc === 12) || (nr === 12 && nc === 0) || (nr === 12 && nc === 12) || (nr === 6 && nc === 6);
-
-        // Kuşatıcı Unsur: Siyah Asker (ATTACKER) veya Yasaklı Bölge
+        const isRestrictedSquare = (nr === 0 && nc === 0) || (nr === 0 && nc === 10) || (nr === 10 && nc === 0) || (nr === 10 && nc === 10) || (nr === 5 && nc === 5);
         const isHostile = (neighborPiece === PIECES.ATTACKER) || isRestrictedSquare;
 
         return isHostile;

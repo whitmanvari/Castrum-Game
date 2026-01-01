@@ -1,90 +1,105 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { gameService } from '../services/gameService'; // Servisi çağırdık
+import { gameService } from '../services/gameService';
+import { User, Swords } from 'lucide-react';
 
 const Tournament = () => {
     const navigate = useNavigate();
-    const [p1, setP1] = useState("");
-    const [p2, setP2] = useState("");
+    const [currentUser, setCurrentUser] = useState(null);
+    const [opponentName, setOpponentName] = useState("");
     const [loading, setLoading] = useState(false);
 
+    // Sayfa açılınca giriş yapmış kullanıcıyı al
+    useEffect(() => {
+        const storedUser = localStorage.getItem("castrum_user");
+        if (!storedUser) {
+            navigate("/"); // Giriş yapmamışsa at
+            return;
+        }
+        setCurrentUser(JSON.parse(storedUser));
+    }, [navigate]);
+
     const startMatch = async () => {
-        if (!p1 || !p2) {
-            alert("Lütfen generallerin ismini giriniz!");
+        if (!opponentName) {
+            alert("Lütfen bir rakip general ismi giriniz!");
             return;
         }
 
         setLoading(true);
         try {
-            // 1. Backend'e istek at
-            const data = await gameService.createGame(p2, p1); // Attacker, Defender
+            // P1: Giriş Yapan (Savunan/Beyaz)
+            // P2: Rakip (Saldıran/Siyah)
+            // İstersen burada yer değiştirebilirsin.
+            const p1 = currentUser.username;
+            const p2 = opponentName.toUpperCase();
 
-            // 2. Başarılıysa o oyunun sayfasına git (ID ile)
-            // Örnek: /game/15
+            const data = await gameService.createGame(p2, p1); // Attacker(P2), Defender(P1)
             navigate(`/game/${data.id}`, { state: { p1, p2 } });
-
         } catch (error) {
             console.error(error);
-            alert("Sunucu hatası! Backend çalışıyor mu?");
+            alert("Oyun başlatılamadı.");
         } finally {
             setLoading(false);
         }
     };
+
+    if (!currentUser) return null;
+
     return (
-        <div className="flex flex-col items-center animate-fade-in w-full max-w-2xl">
+        <div className="flex flex-col items-center justify-center min-h-[80vh] w-full max-w-4xl mx-auto animate-fade-in p-4">
+            
             <div className="text-center mb-10">
-                <h2 className="text-5xl text-[#ffd700] font-bold drop-shadow-md mb-2" style={{ fontFamily: "'Great Vibes', cursive" }}>
-                    Büyük Turnuva
+                <h2 className="text-4xl md:text-5xl text-[#ffd700] font-black drop-shadow-md mb-2 tracking-wide font-cinzel">
+                    KOMUTA MERKEZİ
                 </h2>
-                <p className="text-[#a68b6a] text-sm tracking-[0.3em] uppercase">Marmara BÖTE - Zeka Oyunları Dersi</p>
+                <p className="text-gray-400 text-xs md:text-sm tracking-[0.3em] uppercase">
+                    Hoşgeldin General <span className="text-white font-bold">{currentUser.username}</span>
+                </p>
             </div>
 
-            {/* VS KARTI */}
-            <div className="w-full bg-[#15100d] p-10 border border-[#3e2723] shadow-[0_0_50px_rgba(0,0,0,0.8)] relative flex flex-col md:flex-row items-center gap-8">
+            <div className="bg-[#15100d] border border-[#3e2723] p-8 md:p-12 rounded-2xl shadow-2xl w-full max-w-lg relative overflow-hidden">
+                {/* Dekoratif Çizgiler */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#ffd700] to-transparent opacity-50"></div>
 
-                {/* SAVUNAN (Sol Taraf) */}
-                <div className="flex-1 w-full space-y-2 text-center group">
-                    <div className="text-[#d7ccc8] text-xs font-bold tracking-widest mb-2 group-focus-within:text-[#ffd700]">SAVUNAN (BEYAZ)</div>
-                    <div className="relative">
-                        <div className="w-20 h-20 mx-auto bg-stone-200 rounded-full border-4 border-[#5d4037] flex items-center justify-center text-3xl shadow-inner mb-4">
-                            🛡️
+                <div className="space-y-8">
+                    {/* BEN (Otomatik Dolu) */}
+                    <div>
+                        <label className="flex items-center gap-2 text-[#ffd700] text-xs font-bold tracking-widest mb-3 uppercase">
+                            <User size={16} /> Senin Birliğin (Savunan)
+                        </label>
+                        <div className="w-full bg-[#0c0a09]/50 border border-[#3e2723] p-4 text-[#d7ccc8] font-bold rounded-lg flex items-center gap-3 opacity-80 cursor-not-allowed">
+                            <span className="text-2xl">🛡️</span>
+                            {currentUser.username}
                         </div>
                     </div>
-                    <input
-                        type="text"
-                        placeholder="Öğrenci Adı..."
-                        className="w-full bg-[#0c0a09] border border-[#3e2723] p-3 text-center text-[#d7ccc8] font-bold focus:border-[#ffd700] focus:outline-none transition-colors uppercase tracking-wider"
-                        onChange={(e) => setP1(e.target.value)}
-                    />
-                </div>
 
-                {/* VS Sembolü */}
-                <div className="text-5xl font-black text-[#3e2723] drop-shadow-lg italic">VS</div>
-
-                {/* SALDIRAN (Sağ Taraf) */}
-                <div className="flex-1 w-full space-y-2 text-center group">
-                    <div className="text-[#d7ccc8] text-xs font-bold tracking-widest mb-2 group-focus-within:text-red-500">SALDIRAN (SİYAH)</div>
-                    <div className="relative">
-                        <div className="w-20 h-20 mx-auto bg-stone-900 rounded-full border-4 border-[#5d4037] flex items-center justify-center text-3xl shadow-inner mb-4">
-                            ⚔️
-                        </div>
+                    <div className="flex items-center justify-center opacity-50">
+                        <Swords size={32} className="text-[#8b7355]" />
                     </div>
-                    <input
-                        type="text"
-                        placeholder="Öğrenci Adı..."
-                        className="w-full bg-[#0c0a09] border border-[#3e2723] p-3 text-center text-[#d7ccc8] font-bold focus:border-red-900 focus:outline-none transition-colors uppercase tracking-wider"
-                        onChange={(e) => setP2(e.target.value)}
-                    />
+
+                    {/* RAKİP (Elle Girilecek) */}
+                    <div>
+                        <label className="flex items-center gap-2 text-red-500 text-xs font-bold tracking-widest mb-3 uppercase">
+                            <User size={16} /> Rakip General (Saldıran)
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="RAKİP İSMİ GİRİNİZ..."
+                            className="w-full bg-[#0c0a09] border border-[#3e2723] p-4 text-[#d7ccc8] font-bold focus:border-red-600 focus:ring-1 focus:ring-red-600 focus:outline-none transition-all uppercase tracking-wider rounded-lg"
+                            value={opponentName}
+                            onChange={(e) => setOpponentName(e.target.value)}
+                        />
+                    </div>
+
+                    <button
+                        onClick={startMatch}
+                        disabled={loading}
+                        className="w-full py-4 bg-gradient-to-r from-[#ffd700] to-[#b8860b] hover:from-[#d4af37] hover:to-[#a0522d] text-black font-black tracking-[0.2em] text-lg shadow-[0_0_20px_rgba(255,215,0,0.2)] transform hover:scale-[1.02] active:scale-95 transition-all rounded-xl flex items-center justify-center gap-3"
+                    >
+                        {loading ? "CEPHE OLUŞTURULUYOR..." : "SAVAŞI BAŞLAT"}
+                    </button>
                 </div>
             </div>
-
-            <button
-                onClick={startMatch}
-                disabled={loading}
-                className="mt-10 px-12 py-4 bg-gradient-to-r from-[#b8860b] to-[#8b4513] hover:from-[#d4af37] hover:to-[#a0522d] text-black font-black tracking-widest text-lg shadow-[0_0_20px_rgba(255,215,0,0.2)] hover:scale-105 transition-transform disabled:opacity-50"
-            >
-                {loading ? 'KAYIT YAPILIYOR...' : 'MAÇI BAŞLAT'}
-            </button>
         </div>
     );
 };

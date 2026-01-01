@@ -17,6 +17,7 @@ namespace Castrum_Game_Data
         public DbSet<GameMatch> GameMatches { get; set; }
         public DbSet<GameMove> GameMoves { get; set; }
         public DbSet<InfoContent> InfoContents { get; set; }
+        public DbSet<User> Users { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

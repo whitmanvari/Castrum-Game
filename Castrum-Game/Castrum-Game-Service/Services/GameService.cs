@@ -59,6 +59,7 @@ namespace Castrum_Game_Service.Services
                 })
                 .ToListAsync();
         }
+
         public async Task<GameMatch> GetGameByIdAsync(int id)
         {
             // Hamleleri de (Moves) getir ki tekrar oynatabilelim
@@ -66,45 +67,7 @@ namespace Castrum_Game_Service.Services
                 .Include(x => x.Moves)
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
-        public async Task<List<LeaderboardDto>> GetLeaderboardAsync()
-        {
-            // 1. Biten ve kazananı olan maçları çek
-            var finishedGames = await _context.GameMatches
-                .Where(g => g.Status == GameStatus.Finished && g.Winner != null)
-                .ToListAsync();
-
-            // 2. Kazanan İsimlerini Listele
-            var winners = new List<string>();
-
-            foreach (var game in finishedGames)
-            {
-                if (game.Winner == PlayerSide.Attecker)
-                    winners.Add(game.AttackerName);
-                else if (game.Winner == PlayerSide.Defender)
-                    winners.Add(game.DefenderName);
-            }
-
-            // 3. Grupla ve Say (En çok kazanan en üstte)
-            var leaderboard = winners
-                .GroupBy(name => name)
-                .Select(group => new
-                {
-                    Name = group.Key,
-                    WinCount = group.Count()
-                })
-                .OrderByDescending(x => x.WinCount)
-                .Select((x, index) => new LeaderboardDto
-                {
-                    Rank = index + 1,
-                    PlayerName = x.Name,
-                    Wins = x.WinCount,
-                    Title = x.WinCount > 10 ? "Efsanevi General" : (x.WinCount > 5 ? "Savaş Lordu" : "Acemi Asker")
-                })
-                .ToList();
-
-            return leaderboard;
-        }
-
+  
         public async Task<GameMove> MakeMoveAsync(CreateMoveDto request)
         {
             // 1. Oyunu ve geçmiş hamleleri çek
@@ -123,9 +86,11 @@ namespace Castrum_Game_Service.Services
             PlayerSide currentPlayer = (nextMoveNumber % 2 != 0) ? PlayerSide.Defender : PlayerSide.Attecker;
 
             // 3. Notasyon Oluştur (Örn: A1 -> B1)
-            string[] cols = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M" };
-            // Satırlar ters mantıkta (13 aşağıdan yukarıya)
-            string notation = $"{cols[request.FromCol]}{13 - request.FromRow} -> {cols[request.ToCol]}{13 - request.ToRow}";
+            string[] cols = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K" };
+
+            // Satırlar 11'den geriye sayar
+            string notation = $"{cols[request.FromCol]}{11 - request.FromRow} -> {cols[request.ToCol]}{11 - request.ToRow}";
+
 
             // 4. Yeni Hamle Kaydı Oluştur
             var newMove = new GameMove
@@ -153,6 +118,81 @@ namespace Castrum_Game_Service.Services
             await _context.SaveChangesAsync();
 
             return newMove;
+        }
+        public async Task EndGameAsync(EndGameDto request)
+        {
+            var game = await _context.GameMatches.FirstOrDefaultAsync(g => g.Id == request.GameId);
+            if (game == null || game.Status == GameStatus.Finished) return;
+
+            game.Status = GameStatus.Finished;
+            game.Winner = request.WinnerSide;
+            game.DurationSeconds = (int)(DateTime.Now - game.CreatedDate).TotalSeconds;
+
+            // Kazananı Bul ve İstatistik Güncelle
+            string winnerName = (game.Winner == PlayerSide.Attecker) ? game.AttackerName : game.DefenderName;
+            string loserName = (game.Winner == PlayerSide.Attecker) ? game.DefenderName : game.AttackerName;
+
+            // Kazanan User Güncellemesi
+            var winnerUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == winnerName);
+            if (winnerUser != null)
+            {
+                winnerUser.TotalWins++;
+                winnerUser.TotalGamesPlayed++;
+            }
+
+            // Kaybeden User Güncellemesi
+            var loserUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == loserName);
+            if (loserUser != null)
+            {
+                loserUser.TotalGamesPlayed++;
+            }
+
+            _context.GameMatches.Update(game);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<LeaderboardDto>> GetLeaderboardAsync()
+        {
+            return await _context.Users
+                .Where(u => u.TotalWins > 0) // Sadece en az 1 zaferi olanları getir
+                .OrderByDescending(u => u.TotalWins) // En çok kazanan en üstte
+                .Select((u, index) => new LeaderboardDto
+                {
+                    Rank = index + 1,
+                    PlayerName = u.Username,
+                    Wins = u.TotalWins,
+                    Title = u.TotalWins > 10 ? "EFSANEVİ GENERAL" :
+                            (u.TotalWins > 5 ? "SAVAŞ LORDU" :
+                            (u.TotalWins > 2 ? "YÜZBAŞI" : "ER"))
+                })
+                .ToListAsync();
+        }
+        public async Task<User> LoginAsync(string username)
+        {
+            username = username.ToUpper().Trim(); // İsim standartlaştırma
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user == null)
+            {
+                // Yeni Asker Kaydı
+                user = new User
+                {
+                    Username = username,
+                    CreatedDate = DateTime.Now,
+                    LastLoginDate = DateTime.Now
+                };
+                _context.Users.Add(user);
+            }
+            else
+            {
+                // Eski Askerin Dönüşü
+                user.LastLoginDate = DateTime.Now;
+                _context.Users.Update(user);
+            }
+
+            await _context.SaveChangesAsync();
+            return user;
         }
 
     }

@@ -69,6 +69,28 @@ namespace Castrum_Game_WebAPI.Controllers
             var result = await _gameService.GetLeaderboardAsync();
             return Ok(result);
         }
+
+        [HttpPost("{id}/end")]
+        public async Task<IActionResult> EndGame(int id, [FromBody] EndGameDto request)
+        {
+            request.GameId = id;
+            try
+            {
+                await _gameService.EndGameAsync(request);
+                return Ok(new { message = "Oyun sonlandırıldı ve kazanan kaydedildi." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto request)
+        {
+            if (string.IsNullOrEmpty(request.Username)) return BadRequest("İsim gerekli.");
+            var user = await _gameService.LoginAsync(request.Username);
+            return Ok(user);
+        }
     }
 }
 

@@ -1,7 +1,17 @@
-const API_BASE_URL = "https://localhost:7034/api"; // Backend API temel URL'si
+const API_BASE_URL = "https://localhost:7034/api"; // Portunu kontrol et!
 
 export const gameService = {
-  // 1. Yeni Oyun Oluştur
+  // GİRİŞ YAP
+  login: async (username) => {
+    const response = await fetch(`${API_BASE_URL}/Games/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username })
+    });
+    if (!response.ok) throw new Error('Giriş başarısız');
+    return await response.json(); // User objesi döner (Id, Username, Wins...)
+  },
+
   createGame: async (attackerName, defenderName) => {
     const response = await fetch(`${API_BASE_URL}/Games`, {
       method: 'POST',
@@ -12,32 +22,35 @@ export const gameService = {
     return await response.json();
   },
 
-  // 2. Oyunu Getir (ID ile)
   getGame: async (gameId) => {
     const response = await fetch(`${API_BASE_URL}/Games/${gameId}`);
     if (!response.ok) throw new Error('Oyun bulunamadı');
     return await response.json();
   },
 
-  // 3. Hamle Yap
   makeMove: async (gameId, fromRow, fromCol, toRow, toCol) => {
     const response = await fetch(`${API_BASE_URL}/Games/${gameId}/move`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fromRow, fromCol, 
-        toRow, toCol
-      })
+      body: JSON.stringify({ fromRow, fromCol, toRow, toCol })
     });
-    if (!response.ok) {
-        const err = await response.text();
-        throw new Error(err || 'Hamle geçersiz');
-    }
-    return await response.json(); // Güncel oyun durumunu dönmeli
+    if (!response.ok) throw new Error('Hamle geçersiz');
+    return await response.json();
   },
+
   getLeaderboard: async () => {
     const response = await fetch(`${API_BASE_URL}/Games/leaderboard`);
     if (!response.ok) throw new Error('Liderlik tablosu alınamadı');
+    return await response.json();
+  },
+
+  endGame: async (gameId, winnerSide) => {
+    const response = await fetch(`${API_BASE_URL}/Games/${gameId}/end`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ winnerSide })
+    });
+    if (!response.ok) throw new Error('Oyun sonlandırılamadı');
     return await response.json();
   }
 };
