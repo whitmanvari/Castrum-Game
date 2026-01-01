@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://localhost:7034/api"; // Backend portunu kontrol et!
+const API_BASE_URL = "https://localhost:7034/api"; // Backend API temel URL'si
 
 export const gameService = {
   // 1. Yeni Oyun Oluştur
@@ -34,5 +34,10 @@ export const gameService = {
         throw new Error(err || 'Hamle geçersiz');
     }
     return await response.json(); // Güncel oyun durumunu dönmeli
+  },
+  getLeaderboard: async () => {
+    const response = await fetch(`${API_BASE_URL}/Games/leaderboard`);
+    if (!response.ok) throw new Error('Liderlik tablosu alınamadı');
+    return await response.json();
   }
 };

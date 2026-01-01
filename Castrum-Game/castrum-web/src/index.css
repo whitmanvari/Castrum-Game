@@ -1,12 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Great+Vibes&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Great+Vibes&family=Roboto:wght@400;500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Genel Ayarlar */
 body {
-  font-family: 'Cinzel', serif;
-  background-color: #1c1917; /* Stone-900 tonu */
-  color: #e7e5e4; /* Stone-200 tonu  */
+  font-family: 'Cinzel', serif; 
+  background-color: #1c1917; 
+  color: #e7e5e4; 
+}
+
+.font-readable {
+  font-family: 'Roboto', sans-serif;
 }

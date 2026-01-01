@@ -63,6 +63,12 @@ namespace Castrum_Game_WebAPI.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+        [HttpGet("leaderboard")]
+        public async Task<IActionResult> GetLeaderboard()
+        {
+            var result = await _gameService.GetLeaderboardAsync();
+            return Ok(result);
+        }
     }
 }
 

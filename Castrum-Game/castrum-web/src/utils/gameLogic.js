@@ -1,6 +1,5 @@
 // src/utils/gameLogic.js
 
-// Taş Tipleri
 export const PIECES = {
     EMPTY: 0,
     ATTACKER: 1, // Siyah
@@ -70,7 +69,7 @@ export const isValidMove = (board, fromRow, fromCol, toRow, toCol) => {
     return true;
 };
 
-// Taş Yeme ve Sonuç Mantığı
+// Taş Yeme Mantığı
 export const processMove = (board, r, c, playerType) => {
     const newBoard = board.map(row => [...row]); 
     const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]]; // Sağ, Sol, Aşağı, Yukarı
@@ -83,28 +82,24 @@ export const processMove = (board, r, c, playerType) => {
         const r2 = r + (dr * 2); 
         const c2 = c + (dc * 2); 
 
-        // Tahta sınırları içinde mi?
         if (r2 >= 0 && r2 < 13 && c2 >= 0 && c2 < 13) {
             const neighbor = newBoard[r1][c1];
             const farNeighbor = newBoard[r2][c2];
 
-            // Düşman taşı belirle
             const isMeAttacker = playerType === PIECES.ATTACKER;
             const isNeighborEnemy = isMeAttacker 
                 ? (neighbor === PIECES.DEFENDER) 
                 : (neighbor === PIECES.ATTACKER);
 
             if (isNeighborEnemy) {
-                // Köşe kontrolü için yardımcı fonksiyon
                 const isCorner = (row, col) => (row===0 && col===0) || (row===0 && col===12) || (row===12 && col===0) || (row===12 && col===12) || (row===6 && col===6);
 
-                // Arkasındaki taş dost mu veya köşe mi?
                 const isFarFriendly = isMeAttacker 
                     ? (farNeighbor === PIECES.ATTACKER || isCorner(r2, c2))
                     : (farNeighbor === PIECES.DEFENDER || farNeighbor === PIECES.KING || isCorner(r2, c2));
 
                 if (isFarFriendly) {
-                    newBoard[r1][c1] = PIECES.EMPTY; // TAŞI YE!
+                    newBoard[r1][c1] = PIECES.EMPTY; 
                     captured = true;
                 }
             }
@@ -114,8 +109,52 @@ export const processMove = (board, r, c, playerType) => {
     return { board: newBoard, captured };
 };
 
-// Kazanma Kontrolü (Kral Kaçtı mı?)
+// --- KAZANMA KONTROLLERİ ---
+
+// 1. SAVUNAN KAZANIR (Kral Kaçtı mı?)
 export const checkWin = (board) => {
     const corners = [[0,0], [0,12], [12,0], [12,12]];
     return corners.some(([r, c]) => board[r][c] === PIECES.KING);
+};
+
+// 2. SALDIRAN KAZANIR (Kral Esir Alındı mı?) -> YENİ EKLENDİ!
+export const checkKingCaptured = (board) => {
+    // Önce Kralı Bul
+    let kingPos = null;
+    for (let r = 0; r < 13; r++) {
+        for (let c = 0; c < 13; c++) {
+            if (board[r][c] === PIECES.KING) {
+                kingPos = { r, c };
+                break;
+            }
+        }
+        if (kingPos) break;
+    }
+
+    if (!kingPos) return true; // Kral tahtada yoksa (hata veya yenmiş) kazanılmış sayılır.
+
+    const { r, c } = kingPos;
+    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]]; // Sağ, Sol, Aşağı, Yukarı
+
+    // Kralın 4 tarafı da "Düşman" veya "Yasak Bölge" mi?
+    const isSurrounded = directions.every(([dr, dc]) => {
+        const nr = r + dr;
+        const nc = c + dc;
+
+        // Tahta dışı (Kenarlar) genelde kuşatma sayılmaz, Kral kenara kaçarsa sıkıştırılamaz.
+        // O yüzden kenardaysa FALSE döneriz, yani yakalanamaz.
+        if (nr < 0 || nr >= 13 || nc < 0 || nc >= 13) return false;
+
+        const neighborPiece = board[nr][nc];
+        
+        // Tehlikeli Kareler: Köşeler ve Merkez (Eğer Kral içinde değilse)
+        const isRestrictedSquare = (nr===0 && nc===0) || (nr===0 && nc===12) || (nr===12 && nc===0) || (nr===12 && nc===12) || (nr===6 && nc===6);
+        
+        // Kuşatıcı Unsur: Siyah Asker (ATTACKER) veya Yasaklı Bölge
+        const isHostile = (neighborPiece === PIECES.ATTACKER) || isRestrictedSquare;
+
+        return isHostile;
+    });
+
+    return isSurrounded;
 };

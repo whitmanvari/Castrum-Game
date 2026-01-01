@@ -66,6 +66,44 @@ namespace Castrum_Game_Service.Services
                 .Include(x => x.Moves)
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
+        public async Task<List<LeaderboardDto>> GetLeaderboardAsync()
+        {
+            // 1. Biten ve kazananı olan maçları çek
+            var finishedGames = await _context.GameMatches
+                .Where(g => g.Status == GameStatus.Finished && g.Winner != null)
+                .ToListAsync();
+
+            // 2. Kazanan İsimlerini Listele
+            var winners = new List<string>();
+
+            foreach (var game in finishedGames)
+            {
+                if (game.Winner == PlayerSide.Attecker)
+                    winners.Add(game.AttackerName);
+                else if (game.Winner == PlayerSide.Defender)
+                    winners.Add(game.DefenderName);
+            }
+
+            // 3. Grupla ve Say (En çok kazanan en üstte)
+            var leaderboard = winners
+                .GroupBy(name => name)
+                .Select(group => new
+                {
+                    Name = group.Key,
+                    WinCount = group.Count()
+                })
+                .OrderByDescending(x => x.WinCount)
+                .Select((x, index) => new LeaderboardDto
+                {
+                    Rank = index + 1,
+                    PlayerName = x.Name,
+                    Wins = x.WinCount,
+                    Title = x.WinCount > 10 ? "Efsanevi General" : (x.WinCount > 5 ? "Savaş Lordu" : "Acemi Asker")
+                })
+                .ToList();
+
+            return leaderboard;
+        }
 
         public async Task<GameMove> MakeMoveAsync(CreateMoveDto request)
         {
