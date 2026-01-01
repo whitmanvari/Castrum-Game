@@ -46,6 +46,23 @@ namespace Castrum_Game_WebAPI.Controllers
 
             return Ok(game);
         }
+
+        [HttpPost("{id}/move")]
+        public async Task<IActionResult> MakeMove(int id, [FromBody] CreateMoveDto request)
+        {
+            // ID Güvenliği
+            request.GameId = id;
+
+            try
+            {
+                var result = await _gameService.MakeMoveAsync(request);
+                return Ok(new { message = "Hamle başarılı", data = result });
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
 

@@ -13,7 +13,7 @@ namespace Castrum_Game_Core
         public int GameMatchId { get; set; } //Hangi maça ait?
         [ForeignKey("GameMatchId")]
         public GameMatch GameMatch { get; set; }
-        public string MoveNumber { get; set; } //1. hamle, 2.hamle gibi
+        public int MoveNumber { get; set; } //1. hamle, 2.hamle gibi
         public PlayerSide Player { get; set; } //Kim oynadı?
 
         //Koordinatlar

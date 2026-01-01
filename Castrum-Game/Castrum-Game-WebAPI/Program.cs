@@ -2,24 +2,28 @@
 using Castrum_Game_Data;
 using Castrum_Game_Service.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// CORS AYARI: React uygulamasına izin veriyoruz
+// --- GEVŞEK CORS AYARI  ---
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp",
-        builder =>
-        {
-            builder.WithOrigins("http://localhost:5173") // React'in çalıştığı adres
-                   .AllowAnyHeader()
-                   .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin()  // <-- Hangi adresten gelirse gelsin kabul et!
+               .AllowAnyMethod()  // GET, POST, PUT, DELETE... Hepsi serbest
+               .AllowAnyHeader(); // Her türlü bilgi başlığına izin ver
+    });
 });
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -42,7 +46,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowReactApp");
+app.UseCors("AllowAll"); 
 
 app.UseAuthorization();
 

@@ -67,5 +67,55 @@ namespace Castrum_Game_Service.Services
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
+        public async Task<GameMove> MakeMoveAsync(CreateMoveDto request)
+        {
+            // 1. Oyunu ve geçmiş hamleleri çek
+            var game = await _context.GameMatches
+                                     .Include(g => g.Moves)
+                                     .FirstOrDefaultAsync(g => g.Id == request.GameId);
+
+            if (game == null) throw new Exception("Oyun bulunamadı!");
+
+            // 2. Hamle Sırasını ve Oyuncuyu Belirle
+            int moveCount = game.Moves != null ? game.Moves.Count : 0;
+            int nextMoveNumber = moveCount + 1;
+
+            // Tek sayılar (1,3,5) -> Defender (Beyaz), Çiftler -> Attacker (Siyah) varsayımı
+            // 1=Attacker, 2=Defender
+            PlayerSide currentPlayer = (nextMoveNumber % 2 != 0) ? PlayerSide.Defender : PlayerSide.Attecker;
+
+            // 3. Notasyon Oluştur (Örn: A1 -> B1)
+            string[] cols = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M" };
+            // Satırlar ters mantıkta (13 aşağıdan yukarıya)
+            string notation = $"{cols[request.FromCol]}{13 - request.FromRow} -> {cols[request.ToCol]}{13 - request.ToRow}";
+
+            // 4. Yeni Hamle Kaydı Oluştur
+            var newMove = new GameMove
+            {
+                GameMatchId = request.GameId,
+                Player = currentPlayer,
+                MoveNumber = nextMoveNumber, 
+                FromRow = request.FromRow,
+                FromCol = request.FromCol,
+                ToRow = request.ToRow,
+                ToCol = request.ToCol,
+                Notation = notation,
+                IsCapture = false, 
+                BoardSnapshot = request.BoardSnapshot ?? "UPDATED",
+                CreatedDate = DateTime.Now
+            };
+
+            // 5. Maçın Durumunu Güncelle
+            game.TotalMoves = nextMoveNumber;
+            game.CurrentBoardState = request.BoardSnapshot ?? game.CurrentBoardState;
+
+            // 6. Veritabanına Kaydet
+            _context.GameMoves.Add(newMove);
+            _context.GameMatches.Update(game);
+            await _context.SaveChangesAsync();
+
+            return newMove;
+        }
+
     }
 }
